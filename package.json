@@ -13,5 +13,10 @@
     "mocks"
   ],
   "author": "Massimiliano Marcon",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "minimist": "^1.2.0",
+    "request": "^2.67.0"
+  }
 }
