@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 var argv = require('minimist')(process.argv.slice(2)),
     fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+    logger = require('./lib/logger');
 
 function help(){}
 
@@ -9,11 +10,12 @@ function list(){
     var events = path.join(__dirname, 'events');
     fs.readdir(events, function(err, files){
         if(err) {
-
+            logger.error('Events directory not found');
             return;
         }
-        files.forEach(function(f){
-            console.log(path.parse(f).name);
+        logger.title('Supported events');
+        files.map(function(f){
+            logger.log(path.parse(f).name);
         });
     });
 }
