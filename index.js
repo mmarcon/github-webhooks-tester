@@ -2,6 +2,9 @@
 var argv = require('minimist')(process.argv.slice(2)),
     fs = require('fs'),
     path = require('path'),
+    request = require('request'),
+    uuid = require('node-uuid'),
+    crypto = require('crypto'),
     logger = require('./lib/logger');
 
 var defaults = {
@@ -41,11 +44,37 @@ function list(){
     });
 }
 
-function send(endpoint, event){
+function send(endpoint, secret, event){
     if(!event) {
         return help();
     }
-    logger.info('Sending %s event to %s', event, endpoint);
+    try {
+        var eventJson = require('./events/' + event), headers = {};
+        headers['X-Github-Event'] = event;
+        headers['X-Github-Delivery'] = uuid.v4();
+        if(secret) {
+            hmac = crypto.createHmac('sha1', secret);
+            hmac.update(JSON.stringify(eventJson));
+            headers['X-Hub-Signature'] = hmac.digest('hex');
+        }
+
+        logger.info('Sending %s event to %s', event, endpoint);
+        request({
+            uri: endpoint,
+            method: 'POST',
+            json: true,
+            body: eventJson,
+            headers: headers
+        }, function(error, response, body){
+            if(error) {
+                return logger.error('Error %s', JSON.stringify(error));
+            }
+            logger.info('Status code: %d', response.statusCode);
+        });
+    } catch(e) {
+        console.log(e);
+        logger.error('Event %s is not supported', event);
+    }
 }
 
 var availableCommands = {
@@ -55,14 +84,15 @@ var availableCommands = {
 };
 
 var command = argv._.shift(),
-    arguments = argv._;
+    args = argv._;
 
-arguments.unshift(argv.e || defaults.e);
+args.unshift(argv.s); //secret
+args.unshift(argv.e || defaults.e); //endpoint
 
 header();
 
 if(availableCommands[command]) {
-    availableCommands[command].apply(null, arguments);
+    availableCommands[command].apply(null, args);
     footer();
     return;
 }
