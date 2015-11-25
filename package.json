@@ -4,7 +4,7 @@
   "description": "Helps testing Github webhooks locally",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "build/build.sh"
   },
   "keywords": [
     "github",
